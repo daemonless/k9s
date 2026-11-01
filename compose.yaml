@@ -1,0 +1,42 @@
+name: k9s
+x-daemonless:
+  class: "cli"
+  title: "k9s"
+  icon: ":simple-kubernetes:"
+  category: "Utilities"
+  description: "k9s, the Kubernetes terminal UI, with kubectl, on FreeBSD. Mount your kubeconfig and run it interactively."
+  upstream_url: "https://github.com/derailed/k9s"
+  web_url: "https://k9scli.io/"
+  freshports_url: "https://www.freshports.org/sysutils/k9s/"
+  user: "bsd"
+  upstream_binary: false
+  mlock: false
+  appjail: false
+  community: "Discord:https://discord.gg/Kb9tkhecZT"
+  readme:
+    setup: |-
+      **It is a terminal UI: run it interactively**, with your kubeconfig mounted read-only:
+
+      ```bash
+      podman run --rm -it -v ~/.kube/config:/kubeconfig:ro ghcr.io/daemonless/k9s:latest
+      ```
+
+      kubectl is in the image too: `podman run --rm -it -v ~/.kube/config:/kubeconfig:ro --entrypoint kubectl ghcr.io/daemonless/k9s:latest get pods -A`.
+
+      **The image runs as uid 1000.** A kubeconfig that only its owner can read (the usual `0600`) must belong to uid 1000, or be readable by it; otherwise k9s stops with `permission denied` on `/kubeconfig`. Copy it somewhere readable, or add `--user 0`.
+
+      **A kubeconfig that points at localhost** (a cluster on this same machine) needs `--network host`, so that address means the host and not the container.
+
+      Settings, skins, plugins and k9s's own logs go to `/config`; mount it to keep them between runs.
+  docs:
+    volumes:
+      /kubeconfig: "Your kubeconfig, read-only (KUBECONFIG points here)"
+      /config:
+        desc: "k9s settings, skins, plugins and logs"
+        optional: true
+services:
+  k9s:
+    image: ghcr.io/daemonless/k9s:latest
+    volumes:
+      - ~/.kube/config:/kubeconfig:ro
+      - /path/to/containers/k9s:/config
